@@ -10,7 +10,7 @@ provider "aws" {
 }
 
 module "tags" {
-  source = "github.com/ph-maia/eqi-sre-cloud-infra//modules/tags?ref=master"
+  source = "github.com/ph-maia/sre-cloud-iac//modules/tags?ref=master"
   tags   = var.tags
 }
 

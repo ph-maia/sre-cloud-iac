@@ -1,14 +1,14 @@
 variable "aws_profile" {
-  default = "org"
+  default = "default"
 }
 
 variable "name" {
-  default = "s3-sre-terraform-state"
+  default = "s3-terraform-state-sre"
 }
 
 variable "tags" {
   default = {
-    "Squad" = "SRE",
+    "Squad"   = "SRE",
     "Project" = "Terraform"
   }
 }

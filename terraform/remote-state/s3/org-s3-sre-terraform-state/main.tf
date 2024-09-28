@@ -18,11 +18,9 @@ module "tags" {
 resource "aws_s3_bucket" "terraform_state" {
   bucket = "${terraform.workspace}-${var.name}"
   acl    = "private"
-
   versioning {
     enabled = true
   }
 
   tags = module.tags.tags
-
 }

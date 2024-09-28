@@ -10,11 +10,11 @@ variable "type" {
 }
 
 variable "limit" {
-  default = "500"
+  default = "5"
 }
 
 variable "threshold" {
-  default = 500
+  default = 5
 }
 
 variable "limit_unit" {
@@ -29,14 +29,14 @@ variable "notification" {
   default = {
     comparison_operator = "GREATER_THAN"
     notification_type   = "FORECASTED"
-    threshold           = 500
+    threshold           = 5
     threshold_type      = "ABSOLUTE_VALUE"
   }
 }
 
 variable "subscriber_email_addresses" {
   default = [
-    "cloudops@euqueroinvestir.com"]
+  "pedroepaola02@gmail.com"]
 }
 
 variable "tags" {
