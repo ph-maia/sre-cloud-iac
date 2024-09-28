@@ -41,7 +41,6 @@ variable "subscriber_email_addresses" {
 
 variable "tags" {
   default = {
-    "Squad"   = "Shared",
-    "Project" = "Monitoring"
+    "Project" = "Personal"
   }
 }
