@@ -6,7 +6,7 @@ terraform {
 
 provider "aws" {
   profile = var.aws_profile
-  region  = "us-east-1"
+  region  = var.aws_region
 }
 
 module "tags" {
@@ -16,11 +16,13 @@ module "tags" {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = var.name
+  bucket = "dev-hml-${var.name}"
   acl    = "private"
+
   versioning {
     enabled = true
   }
 
   tags = module.tags.tags
+
 }

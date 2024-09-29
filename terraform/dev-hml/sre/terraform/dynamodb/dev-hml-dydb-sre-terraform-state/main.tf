@@ -6,13 +6,13 @@ terraform {
 
 provider "aws" {
   profile = var.aws_profile
-  region  = "us-east-1"
+  region  = var.aws_region
 }
 
 module "dynamodb" {
-  source = "github.com/ph-maia/sre-cloud-iac//modules/dynamodb?ref=master"
+  source = "github.com/ph-maia/eqi-sre-cloud-infra//modules/dynamodb?ref=master"
 
-  name          = var.name
+  name          = "dev-hml-${var.name}"
   hash_key      = var.hash_key
   type_hash_key = var.type_hash
 

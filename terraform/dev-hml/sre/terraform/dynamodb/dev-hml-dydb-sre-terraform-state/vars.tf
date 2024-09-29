@@ -1,6 +1,5 @@
-variable "aws_profile" {
-  default = "default"
-}
+variable "aws_profile" {}
+variable "aws_region" {}
 
 variable "name" {
   default = "dydb-sre-terraform-state"
@@ -17,6 +16,6 @@ variable "type_hash" {
 variable "tags" {
   default = {
     "Squad"   = "SRE",
-    "Project" = "Terraform"
+    "Project" = "Ci/CD"
   }
 }
