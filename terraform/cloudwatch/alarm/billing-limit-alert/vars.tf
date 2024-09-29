@@ -1,5 +1,9 @@
-variable "aws_profile" {}
-variable "aws_region" {}
+variable "aws_profile" {
+  default = "default"
+}
+variable "aws_region" {
+  default = "us-east-1"
+}
 
 variable "name" {
   default = "Limite de custo - %s USD foi atingido"
@@ -41,6 +45,7 @@ variable "subscriber_email_addresses" {
 
 variable "tags" {
   default = {
-    "Project" = "Personal"
+    "Squad"   = "Shared",
+    "Project" = "Monitoring"
   }
 }

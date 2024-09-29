@@ -1,5 +1,5 @@
 variable "aws_profile" {
-  default = "org"
+  default = "default"
 }
 
 variable "name" {
@@ -16,7 +16,7 @@ variable "type_hash" {
 
 variable "tags" {
   default = {
-    "Squad" = "SRE",
+    "Squad"   = "SRE",
     "Project" = "Terraform"
   }
 }

@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">=1.1.5"
+  required_version = ">=1.9.5"
 
   backend "s3" {}
 }
@@ -12,7 +12,7 @@ provider "aws" {
 module "dynamodb" {
   source = "github.com/ph-maia/sre-cloud-iac//modules/dynamodb?ref=master"
 
-  name          = "${terraform.workspace}-${var.name}"
+  name          = var.name
   hash_key      = var.hash_key
   type_hash_key = var.type_hash
 

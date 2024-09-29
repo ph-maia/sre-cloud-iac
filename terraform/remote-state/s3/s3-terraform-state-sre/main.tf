@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">=1.1.5"
+  required_version = ">=1.9.5"
 
   backend "s3" {}
 }
@@ -16,7 +16,7 @@ module "tags" {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "${terraform.workspace}-${var.name}"
+  bucket = var.name
   acl    = "private"
   versioning {
     enabled = true
