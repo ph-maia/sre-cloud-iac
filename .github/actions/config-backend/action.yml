@@ -1,0 +1,20 @@
+name: 'Get-Key'
+description: 'get key'
+inputs:    
+  path:
+    description: 'path that changed'
+    required: true
+  workspace: 
+    description: 'workspace to create backend envs'
+    required: true
+  profile: 
+    description: 'profile to create backend envs'
+    required: true
+outputs:
+  key:
+    description: 'key of backend'
+  path:
+    description: 'key of terraform'
+runs:
+  using: 'node12'
+  main: 'index.js'

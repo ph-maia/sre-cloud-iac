@@ -1,0 +1,121 @@
+name: TF Plan Triggered
+on:
+  push:
+    paths:
+      - 'terraform/**'     
+
+env:
+  TF_VERSION: 1.9.5
+  GITHUB_AUTH_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
+
+jobs:
+  pathFinder:    
+    runs-on: ubuntu-latest
+    name: Path Finder
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      path: ${{steps.get-path.outputs.path}}
+      continue: ${{steps.get-path.outputs.continue}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 3
+
+      - name: getPath
+        id: get-path
+        uses: ./.github/actions/node-diff
+        with:
+          current_commit: ${{github.sha}}
+          commit_msg: ${{ github.event.head_commit.message }}
+          #pull_request_commit: ${{ github.event.pull_request.head.sha }}          
+
+      - name: Show Finded Pathes
+        run: echo "${{ steps.get-path.outputs.path }}"
+  
+  terraformPlan:        
+    needs: pathFinder
+    if: ${{ needs.pathFinder.outputs.continue == 'true'}}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.pathFinder.outputs.path)}}    
+    name: Terraform Job at ${{matrix.path}}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{matrix.path}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get Env
+        id: getenv
+        uses: ./.github/actions/get-env
+        with:
+          path: ${{matrix.path}}
+          commit_msg: ${{ github.event.head_commit.message }}
+          event: ${{github.event_name}}
+      
+      - name: Setup AWS Profile
+        uses: ./.github/actions/setup-aws-py
+        with:
+          aws_profile: ${{ steps.getenv.outputs.aws_profile }}
+          root_path: ~/
+        env:
+          ORG_TF_AWS_KEY_ID: ${{ secrets.ORG_TF_AWS_KEY_ID }}
+          ORG_TF_AWS_SECRET_KEY: ${{ secrets.ORG_TF_AWS_SECRET_KEY }}
+          HML_TF_AWS_KEY_ID: ${{ secrets.HML_TF_AWS_KEY_ID }}
+          HML_TF_AWS_SECRET_KEY: ${{ secrets.HML_TF_AWS_SECRET_KEY }}
+          PRD_TF_AWS_KEY_ID: ${{ secrets.PRD_TF_AWS_KEY_ID }}
+          PRD_TF_AWS_SECRET_KEY: ${{ secrets.PRD_TF_AWS_SECRET_KEY }}
+
+      - name: Get S3 Key
+        id: s3-key
+        uses: ./.github/actions/config-backend
+        with:
+          workspace: ${{ github.workspace }}/terraform/${{ steps.getenv.outputs.env_dir }}/backend.tfvars
+          path: ${{matrix.path}}
+          profile: ${{ steps.getenv.outputs.aws_profile }}
+      
+      - name: Configure Git Credentials
+        uses: fusion-engineering/setup-git-credentials@v2
+        with:
+          credentials: https://ph-maia:${{ env.GITHUB_AUTH_TOKEN }}@github.com
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config=${{ github.workspace }}/terraform/${{ steps.getenv.outputs.env_dir }}/backend.tfvars
+
+      - name: Terraform Create Workspace
+        id: workspace
+        run: |
+          terraform workspace select ${{ steps.getenv.outputs.aws_profile }} || terraform workspace new ${{ steps.getenv.outputs.aws_profile }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+        continue-on-error: false
+
+      - name: Terraform Plan Apply
+        id: plan-apply
+        run: |
+          terraform plan -var='aws_profile=${{ steps.getenv.outputs.aws_profile }}' -var='aws_region=${{ steps.getenv.outputs.aws_region }}'
+        continue-on-error: false
+      
+      - name: IF FAILURE
+        if: steps.plan.outcome == 'failure'
+        id: error
+        run: echo "::error::Error at planning terraform in ${{env.WORKSPACE}}"    
+        env:
+          AWS_PROFILE: ${{ steps.getenv.outputs.aws_profile }}
+
+      - name: Delete AWS Credential
+        run: rm -rf ~/.aws

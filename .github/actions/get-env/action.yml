@@ -1,0 +1,25 @@
+name: 'Get-Env'
+description: 'get environment to profile and dir'
+inputs:  
+  path:
+    description: 'path from main dir'
+    required: false
+  commit_msg:
+    description: 'commit message'
+    required: false
+  environment:
+    description: 'environment input'
+    required: false
+  event:
+    description: 'workflow event trigger'
+    required: false
+outputs:
+  aws_profile:
+    description: 'aws profile'
+  env_dir:
+    description: 'environment directory name'
+  aws_region:
+    description: 'region default'
+runs:
+  using: 'node12'
+  main: 'index.js'

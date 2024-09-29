@@ -1,0 +1,19 @@
+name: 'Diff-Path'
+description: 'get paths'
+inputs:  
+  current_commit:
+    description: 'Context commit'
+    required: true
+  commit_msg:
+    description: 'Context commit message'
+    required: true
+  #pull_request_commit:
+  #  description: 'Last commit from pull_request'  
+outputs:
+  path:
+    description: 'Paths that have changed'
+  continue:
+    description: 'continue running next step'
+runs:
+  using: 'node12'
+  main: 'index.js'

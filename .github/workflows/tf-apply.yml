@@ -1,0 +1,138 @@
+name: TF Apply/Destroy
+on:
+  workflow_dispatch:
+    inputs:
+      destroy:
+        description: 'Run Destroy in the directory'
+        type: boolean
+        required: false
+        default: false
+      path:
+        description: 'Directory to create/destroy'
+        required: true
+      environment:
+        type: choice
+        description: Environment to apply/destroy (only dev or hml)
+        options:
+        - dev
+        - hml
+
+env:
+  TF_VERSION: 1.9.5
+  GITHUB_AUTH_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
+
+jobs:
+  terraformApply:    
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    name: Terraform Job at ${{github.event.inputs.path}}    
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{github.event.inputs.path}}
+    env:
+      WORKSPACE: ${{github.event.inputs.path}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get Env
+        id: getenv
+        uses: ./.github/actions/get-env
+        with:
+          environment: ${{github.event.inputs.environment}}
+          event: ${{github.event_name}}
+          path: ${{github.event.inputs.path}}
+
+      - name: Setup AWS Profile
+        uses: ./.github/actions/setup-aws-py
+        with:
+          aws_profile: ${{ steps.getenv.outputs.aws_profile }}
+          root_path: ~/
+        env:
+          ORG_TF_AWS_KEY_ID: ${{ secrets.ORG_TF_AWS_KEY_ID }}
+          ORG_TF_AWS_SECRET_KEY: ${{ secrets.ORG_TF_AWS_SECRET_KEY }}
+          HML_TF_AWS_KEY_ID: ${{ secrets.HML_TF_AWS_KEY_ID }}
+          HML_TF_AWS_SECRET_KEY: ${{ secrets.HML_TF_AWS_SECRET_KEY }}
+          PRD_TF_AWS_KEY_ID: ${{ secrets.PRD_TF_AWS_KEY_ID }}
+          PRD_TF_AWS_SECRET_KEY: ${{ secrets.PRD_TF_AWS_SECRET_KEY }}          
+
+      - name: Get S3 Key
+        id: s3-key
+        uses: ./.github/actions/config-backend
+        with:
+          workspace: ${{ github.workspace }}/terraform/${{ steps.getenv.outputs.env_dir }}/backend.tfvars
+          path: ${{ env.WORKSPACE }}
+          profile: ${{ steps.getenv.outputs.aws_profile }}
+
+      - name: Configure Git Credentials
+        uses: fusion-engineering/setup-git-credentials@v2
+        with:
+          credentials: https://ph-maia:${{ env.GITHUB_AUTH_TOKEN }}@github.com
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config=${{ github.workspace }}/terraform/${{ steps.getenv.outputs.env_dir }}/backend.tfvars 
+
+      - name: Terraform Create Workspace
+        id: workspace
+        run: |
+          terraform workspace select ${{ steps.getenv.outputs.aws_profile }} || terraform workspace new ${{ steps.getenv.outputs.aws_profile }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+        continue-on-error: false
+
+      - name: Terraform Plan Apply
+        id: plan-apply
+        if: ${{ github.event.inputs.destroy == 'false'}}
+        run: |
+          terraform plan -var='aws_profile=${{ steps.getenv.outputs.aws_profile }}' -var='aws_region=${{ steps.getenv.outputs.aws_region }}' -out=plan-file.tfplan
+        continue-on-error: false
+      
+      - name: Terraform Plan Destroy
+        id: plan-destroy
+        if: ${{ github.event.inputs.destroy == 'true'}}
+        run: |
+          terraform plan -destroy -var='aws_profile=${{ steps.getenv.outputs.aws_profile }}' -var='aws_region=${{ steps.getenv.outputs.aws_region }}' -out=plan-file-destroy.tfplan
+        continue-on-error: false
+      
+      - name: IF FAILURE
+        if: steps.plan.outcome == 'failure'
+        id: error
+        run: echo "::error::Error at planning terraform in ${{env.WORKSPACE}}"    
+
+      - name: Terraform Apply
+        id: apply
+        if: ${{ github.event.inputs.destroy == 'false'}}
+        run: |
+          echo "::debug::Applying terraform in ${{env.WORKSPACE}}"
+          terraform apply -auto-approve plan-file.tfplan
+        env:
+          AWS_PROFILE: ${{ steps.getenv.outputs.aws_profile }}
+        
+      - name: Terraform Destroy
+        id: destroy
+        if: ${{ github.event.inputs.destroy == 'true'}}
+        run: |
+          echo "::debug::Applying terraform in ${{env.WORKSPACE}}"
+          terraform apply -auto-approve plan-file-destroy.tfplan
+        env:
+          AWS_PROFILE: ${{ steps.getenv.outputs.aws_profile }}
+
+      - name: Terraform Output
+        id: output
+        run: |          
+          terraform output
+        env:
+          AWS_PROFILE: ${{ steps.getenv.outputs.aws_profile }}
+
+      - name: Delete AWS Credential
+        run: rm -rf ~/.aws
