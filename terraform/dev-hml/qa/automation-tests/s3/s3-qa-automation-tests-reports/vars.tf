@@ -2,7 +2,7 @@ variable "aws_profile" {}
 variable "aws_region" {}
 
 variable "name" {
-  default = "s3-qa-automation-tests-reports"
+  default = "s3-qa-automation-tests"
 }
 
 variable "tags" {
