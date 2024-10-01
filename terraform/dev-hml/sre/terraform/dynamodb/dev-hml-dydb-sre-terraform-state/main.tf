@@ -16,7 +16,6 @@ module "dynamodb" {
   hash_key      = var.hash_key
   type_hash_key = var.type_hash
 
-
   tags = var.tags
 
 }
