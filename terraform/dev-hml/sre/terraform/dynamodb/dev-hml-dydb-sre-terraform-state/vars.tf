@@ -2,7 +2,7 @@ variable "aws_profile" {}
 variable "aws_region" {}
 
 variable "name" {
-  default = "dydb-sre-terraform-state"
+  default = "dydb-terraform-state"
 }
 
 variable "hash_key" {
