@@ -20,7 +20,7 @@ resource "aws_s3_bucket" "bucket" {
   tags   = module.tags.tags
 }
 
-resource "aws_s3_bucket_acl" "acl" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
+# resource "aws_s3_bucket_acl" "acl" {
+#   bucket = aws_s3_bucket.bucket.id
+#   acl    = "private"
+# }
