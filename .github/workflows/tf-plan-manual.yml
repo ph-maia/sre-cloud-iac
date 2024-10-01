@@ -69,7 +69,7 @@ jobs:
       - name: Configure Git Credentials
         uses: fusion-engineering/setup-git-credentials@v2
         with:
-          credentials: https://eqi-app:${{ env.GITHUB_AUTH_TOKEN }}@github.com
+          credentials: https://ph-maia:${{ env.GITHUB_AUTH_TOKEN }}@github.com
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
