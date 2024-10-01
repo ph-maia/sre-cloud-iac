@@ -10,7 +10,7 @@ provider "aws" {
 }
 
 module "dynamodb" {
-  source = "github.com/ph-maia/eqi-sre-cloud-infra//modules/dynamodb?ref=master"
+  source = "github.com/ph-maia/sre-cloud-iac//modules/dynamodb?ref=master"
 
   name          = "dev-hml-${var.name}"
   hash_key      = var.hash_key
