@@ -8,6 +8,6 @@ variable "name" {
 variable "tags" {
   default = {
     "Squad"   = "SRE",
-    "Project" = "CI/CD"
+    "Project" = "IAC"
   }
 }
